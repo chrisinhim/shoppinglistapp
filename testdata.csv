@@ -1,0 +1,4 @@
+username,email,password,listName,itemName,quantity
+user1,user1@example.com,pass123,Groceries,Milk,2
+user2,user2@example.com,pass456,Electronics,Phone,1
+user3,user3@example.com,pass789,Stationery,Pen,10

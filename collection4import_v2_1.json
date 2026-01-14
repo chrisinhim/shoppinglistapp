@@ -1,0 +1,633 @@
+{
+	"info": {
+		"_postman_id": "8a4d2d5e-6cfa-4362-aac4-c4e235b38546",
+		"name": "ShoppingLists Regression Suite",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "16597289"
+	},
+	"item": [
+		{
+			"name": "1. Setup & Auth",
+			"item": [
+				{
+					"name": "Sign Up (Unique)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generate unique user data",
+									"const timestamp = Date.now();",
+									"pm.collectionVariables.set(\"unq_username\", \"user_\" + timestamp);",
+									"pm.collectionVariables.set(\"unq_email\", \"user_\" + timestamp + \"@test.com\");",
+									"pm.collectionVariables.set(\"unq_password\", \"pass_\" + timestamp);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"username\": \"{{unq_username}}\",\r\n  \"email\": \"{{unq_email}}\",\r\n  \"password\": \"{{unq_password}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURI}}/api/auth/register",
+							"host": [
+								"{{baseURI}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login & Get Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"var json = pm.response.json();",
+									"if (json.token) {",
+									"    pm.collectionVariables.set(\"token\", json.token);",
+									"    // Decode token to get UserId",
+									"    var payload = JSON.parse(atob(json.token.split('.')[1]));",
+									"    pm.collectionVariables.set(\"userId\", payload.userId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"username\": \"{{unq_username}}\",\r\n  \"password\": \"{{unq_password}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURI}}/api/auth/login",
+							"host": [
+								"{{baseURI}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. User Tests",
+			"item": [
+				{
+					"name": "Read Current User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Username matches\", function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.username).to.eql(pm.collectionVariables.get(\"unq_username\"));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURI}}/api/users/{{userId}}",
+							"host": [
+								"{{baseURI}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User Email",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.set(\"updated_email\", \"upd_\" + Date.now() + \"@test.com\");"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Email updated\", function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.email).to.eql(pm.collectionVariables.get(\"updated_email\"));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"{{updated_email}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURI}}/api/users/{{userId}}",
+							"host": [
+								"{{baseURI}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. List Tests",
+			"item": [
+				{
+					"name": "Create Shopping List",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.set(\"unq_listname\", \"List_\" + Date.now());"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"var json = pm.response.json();",
+									"pm.collectionVariables.set(\"listId\", json._id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"{{unq_listname}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURI}}/api/lists",
+							"host": [
+								"{{baseURI}}"
+							],
+							"path": [
+								"api",
+								"lists"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get List Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Verify List Name\", function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.name).to.eql(pm.collectionVariables.get(\"unq_listname\"));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURI}}/api/lists/{{listId}}",
+							"host": [
+								"{{baseURI}}"
+							],
+							"path": [
+								"api",
+								"lists",
+								"{{listId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update List Name",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.set(\"updated_listname\", \"List_Upd_\" + Date.now());"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Verify Updated Name\", function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.name).to.eql(pm.collectionVariables.get(\"updated_listname\"));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"{{updated_listname}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURI}}/api/lists/{{listId}}",
+							"host": [
+								"{{baseURI}}"
+							],
+							"path": [
+								"api",
+								"lists",
+								"{{listId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Item Tests",
+			"item": [
+				{
+					"name": "Add Item",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.set(\"unq_itemname\", \"Item_\" + Date.now());"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"var json = pm.response.json();",
+									"pm.collectionVariables.set(\"itemId\", json._id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"{{unq_itemname}}\",\r\n  \"quantity\": 5,\r\n  \"shoppingList\": \"{{listId}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURI}}/api/items/",
+							"host": [
+								"{{baseURI}}"
+							],
+							"path": [
+								"api",
+								"items",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Verify Purchased Status\", function () {",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.purchased).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"purchased\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURI}}/api/items/{{itemId}}",
+							"host": [
+								"{{baseURI}}"
+							],
+							"path": [
+								"api",
+								"items",
+								"{{itemId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURI}}/api/items/{{itemId}}",
+							"host": [
+								"{{baseURI}}"
+							],
+							"path": [
+								"api",
+								"items",
+								"{{itemId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "5. Cleanup",
+			"item": [
+				{
+					"name": "Delete List",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURI}}/api/lists/{{listId}}",
+							"host": [
+								"{{baseURI}}"
+							],
+							"path": [
+								"api",
+								"lists",
+								"{{listId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseURI}}/api/users/{{userId}}",
+							"host": [
+								"{{baseURI}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"{{userId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "listId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "itemId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "unq_username",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "unq_email",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "unq_password",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "unq_listname",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "updated_listname",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "unq_itemname",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "updated_email",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "baseURI",
+			"value": "http://localhost:3000",
+			"type": "string"
+		}
+	]
+}

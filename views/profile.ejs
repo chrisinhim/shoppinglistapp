@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Profile</title>
+</head>
+<body>
+    <h1>Welcome back, <%= username %>!</h1>
+    
+    <p>Status: You are logged in as a <%= role %>.</p>
+
+    <% if (role === 'admin') { %>
+        <button>Access Admin Dashboard</button>
+    <% } %>
+</body>
+</html>
