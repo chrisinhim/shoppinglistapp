@@ -2,4 +2,4 @@ runtime: nodejs20
 # Environment variables can be set here, but for sensitive data (like DB passwords),
 # it is better to set them via the command line or the Google Cloud Console.
 env_variables:
-  MONGO_URI: "mongodb+srv://chrisinhim:titanic@cluster0.uuuztzr.mongodb.net/?appName=Cluster0"
+  MONGO_URI: "mongodb+srv://chrisinhim:titanic@cluster0.uuuztzr.mongodb.net/shoppinglist?appName=Cluster0"
