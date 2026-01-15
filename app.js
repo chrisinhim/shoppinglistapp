@@ -12,6 +12,7 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/shoppinglis
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
